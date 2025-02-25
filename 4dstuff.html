@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>4D Metaphysical Visualization</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: #000;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      z-index: 2;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 0 10px rgba(100, 200, 255, 0.5);
+    }
+    
+    .slider-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 300px;
+    }
+    
+    .slider-container label {
+      width: 120px;
+      color: #9cf;
+    }
+    
+    input[type="range"] {
+      flex-grow: 1;
+      accent-color: #5af;
+    }
+    
+    .dimension-label {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      font-size: 24px;
+      text-shadow: 0 0 10px #5af;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 80%;
+    }
+    
+    .quote {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      z-index: 2;
+      font-style: italic;
+      max-width: 300px;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(100, 200, 255, 0.5);
+    }
+    
+    .quote-author {
+      text-align: right;
+      margin-top: 10px;
+      color: #9cf;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <canvas id="canvas"></canvas>
+    
+    <div class="dimension-label">
+      Tesseract Projection: <span id="dimension-name">Spacetime Continuum</span>
+    </div>
+    
+    <div class="controls">
+      <div class="slider-container">
+        <label for="rotationSpeed">Rotation Speed:</label>
+        <input type="range" id="rotationSpeed" min="0" max="100" value="50">
+      </div>
+      
+      <div class="slider-container">
+        <label for="wDimension">W-Dimension:</label>
+        <input type="range" id="wDimension" min="0" max="100" value="50">
+      </div>
+      
+      <div class="slider-container">
+        <label for="complexity">Complexity:</label>
+        <input type="range" id="complexity" min="1" max="10" value="5">
+      </div>
+      
+      <div class="slider-container">
+        <label for="entropy">Entropy:</label>
+        <input type="range" id="entropy" min="0" max="100" value="30">
+      </div>
+      
+      <div class="slider-container">
+        <label for="timeFlow">Time Flow:</label>
+        <input type="range" id="timeFlow" min="1" max="100" value="50">
+      </div>
+    </div>
+    
+    <div class="quote" id="quote">
+      "The only way to discover the limits of the possible is to go beyond them into the impossible."
+      <div class="quote-author">- Arthur C. Clarke</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    // Set up the scene
+    const canvas = document.getElementById('canvas');
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      antialias: true,
+      alpha: true
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0x333333);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    scene.add(directionalLight);
+    
+    const pointLight = new THREE.PointLight(0x5599ff, 1, 100);
+    pointLight.position.set(0, 0, 2);
+    scene.add(pointLight);
+    
+    // Create tesseract vertices
+    let vertices = [];
+    const createTesseract = (size) => {
+      vertices = [];
+      for (let x = -1; x <= 1; x += 2) {
+        for (let y = -1; y <= 1; y += 2) {
+          for (let z = -1; z <= 1; z += 2) {
+            for (let w = -1; w <= 1; w += 2) {
+              vertices.push(new THREE.Vector4(x * size, y * size, z * size, w * size));
+            }
+          }
+        }
+      }
+      return vertices;
+    };
+    
+    // Project 4D points to 3D
+    const projectTo3D = (vertices, wFactor) => {
+      const projectedVertices = [];
+      vertices.forEach(v => {
+        // Use w dimension for the 4D to 3D projection
+        const w = v.w * wFactor;
+        const perspective = 1 / (3 - w);
+        
+        const projected = new THREE.Vector3(
+          v.x * perspective,
+          v.y * perspective,
+          v.z * perspective
+        );
+        projectedVertices.push(projected);
+      });
+      return projectedVertices;
+    };
+    
+    // Draw connections between points
+    const drawConnections = (points) => {
+      const lines = [];
+      
+      // Define edges for a tesseract (hypercube)
+      for (let i = 0; i < 16; i++) {
+        for (let j = i + 1; j < 16; j++) {
+          // Only connect points that differ in exactly one coordinate
+          const diffCount = diffCoordinates(vertices[i], vertices[j]);
+          if (diffCount === 1) {
+            lines.push([points[i], points[j]]);
+          }
+        }
+      }
+      
+      return lines;
+    };
+    
+    // Helper function to count different coordinates between two 4D points
+    const diffCoordinates = (p1, p2) => {
+      let count = 0;
+      if (Math.abs(p1.x - p2.x) > 0.1) count++;
+      if (Math.abs(p1.y - p2.y) > 0.1) count++;
+      if (Math.abs(p1.z - p2.z) > 0.1) count++;
+      if (Math.abs(p1.w - p2.w) > 0.1) count++;
+      return count;
+    };
+    
+    // Variables for the visualization
+    let tesseractSize = 1;
+    let rotationSpeed = 0.005;
+    let wFactor = 0.2;
+    let complexity = 5;
+    let particles = [];
+    let particleSystem;
+    let lineObjects = [];
+    let entropy = 0.3;
+    let timeFlow = 1;
+    
+    // Get UI elements
+    const rotationSpeedSlider = document.getElementById('rotationSpeed');
+    const wDimensionSlider = document.getElementById('wDimension');
+    const complexitySlider = document.getElementById('complexity');
+    const entropySlider = document.getElementById('entropy');
+    const timeFlowSlider = document.getElementById('timeFlow');
+    const dimensionName = document.getElementById('dimension-name');
+    
+    // Add event listeners
+    rotationSpeedSlider.addEventListener('input', () => {
+      rotationSpeed = rotationSpeedSlider.value / 10000;
+      updateDimensionLabel();
+    });
+    
+    wDimensionSlider.addEventListener('input', () => {
+      wFactor = wDimensionSlider.value / 250;
+      updateDimensionLabel();
+    });
+    
+    complexitySlider.addEventListener('input', () => {
+      complexity = parseInt(complexitySlider.value);
+      createParticleSystem();
+      updateDimensionLabel();
+    });
+    
+    entropySlider.addEventListener('input', () => {
+      entropy = entropySlider.value / 100;
+      updateDimensionLabel();
+    });
+    
+    timeFlowSlider.addEventListener('input', () => {
+      timeFlow = timeFlowSlider.value / 50;
+      updateDimensionLabel();
+    });
+    
+    // Create and update the tesseract
+    const createTesseractGraph = () => {
+      // Clean up previous objects
+      lineObjects.forEach(obj => scene.remove(obj));
+      lineObjects = [];
+      
+      // Create new tesseract
+      vertices = createTesseract(tesseractSize);
+      
+      // Apply rotations in 4D
+      rotateVertices4D();
+      
+      // Project to 3D
+      const projectedPoints = projectTo3D(vertices, wFactor);
+      
+      // Draw connections
+      const connections = drawConnections(projectedPoints);
+      
+      connections.forEach(([start, end]) => {
+        const material = new THREE.LineBasicMaterial({
+          color: getLineColor(start, end),
+          transparent: true,
+          opacity: 0.7
+        });
+        
+        const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+        lineObjects.push(line);
+      });
+      
+      // Draw vertices
+      projectedPoints.forEach(point => {
+        const sphereGeometry = new THREE.SphereGeometry(0.05, 8, 8);
+        const sphereMaterial = new THREE.MeshPhongMaterial({
+          color: 0x66ffff,
+          emissive: 0x113366,
+          shininess: 30
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.copy(point);
+        scene.add(sphere);
+        lineObjects.push(sphere);
+      });
+    };
+    
+    // Function to determine line color based on 4D properties
+    const getLineColor = (start, end) => {
+      // Get distance to create a color gradient
+      const dist = start.distanceTo(end);
+      const hue = (dist * 60 + 180) % 360;
+      return new THREE.Color(`hsl(${hue}, 70%, 60%)`);
+    };
+    
+    // Create particle system for the background
+    const createParticleSystem = () => {
+      if (particleSystem) {
+        scene.remove(particleSystem);
+      }
+      
+      const particleCount = 500 * complexity;
+      const particleGeometry = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+      const particleSizes = new Float32Array(particleCount);
+      const particleColors = new Float32Array(particleCount * 3);
+      
+      particles = [];
+      
+      for (let i = 0; i < particleCount; i++) {
+        const particle = {
+          position: new THREE.Vector3(
+            (Math.random() - 0.5) * 20,
+            (Math.random() - 0.5) * 20,
+            (Math.random() - 0.5) * 20
+          ),
+          velocity: new THREE.Vector3(
+            (Math.random() - 0.5) * 0.01,
+            (Math.random() - 0.5) * 0.01,
+            (Math.random() - 0.5) * 0.01
+          ),
+          size: Math.random() * 0.1 + 0.05,
+          color: new THREE.Color(
+            Math.random() * 0.2 + 0.4,
+            Math.random() * 0.5 + 0.5,
+            Math.random() * 0.2 + 0.8
+          )
+        };
+        
+        particles.push(particle);
+        
+        particlePositions[i * 3] = particle.position.x;
+        particlePositions[i * 3 + 1] = particle.position.y;
+        particlePositions[i * 3 + 2] = particle.position.z;
+        particleSizes[i] = particle.size;
+        
+        particleColors[i * 3] = particle.color.r;
+        particleColors[i * 3 + 1] = particle.color.g;
+        particleColors[i * 3 + 2] = particle.color.b;
+      }
+      
+      particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+      particleGeometry.setAttribute('size', new THREE.BufferAttribute(particleSizes, 1));
+      particleGeometry.setAttribute('color', new THREE.BufferAttribute(particleColors, 3));
+      
+      const particleMaterial = new THREE.PointsMaterial({
+        size: 0.1,
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      particleSystem = new THREE.Points(particleGeometry, particleMaterial);
+      scene.add(particleSystem);
+    };
+    
+    // Update particle positions
+    const updateParticles = () => {
+      if (!particleSystem) return;
+      
+      const positions = particleSystem.geometry.attributes.position.array;
+      
+      for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        
+        // Add entropy (randomness)
+        if (Math.random() < entropy) {
+          particle.velocity.x += (Math.random() - 0.5) * 0.002;
+          particle.velocity.y += (Math.random() - 0.5) * 0.002;
+          particle.velocity.z += (Math.random() - 0.5) * 0.002;
+        }
+        
+        // Update position
+        particle.position.x += particle.velocity.x * timeFlow;
+        particle.position.y += particle.velocity.y * timeFlow;
+        particle.position.z += particle.velocity.z * timeFlow;
+        
+        // Boundary check and wrap around
+        if (Math.abs(particle.position.x) > 10) particle.position.x *= -0.95;
+        if (Math.abs(particle.position.y) > 10) particle.position.y *= -0.95;
+        if (Math.abs(particle.position.z) > 10) particle.position.z *= -0.95;
+        
+        // Update the buffer array
+        positions[i * 3] = particle.position.x;
+        positions[i * 3 + 1] = particle.position.y;
+        positions[i * 3 + 2] = particle.position.z;
+      }
+      
+      particleSystem.geometry.attributes.position.needsUpdate = true;
+    };
+    
+    // Rotate vertices in 4D
+    const rotateVertices4D = () => {
+      // 6 rotation planes in 4D: xy, xz, xw, yz, yw, zw
+      const rotateXY = (v, angle) => {
+        const x = v.x;
+        const y = v.y;
+        v.x = x * Math.cos(angle) - y * Math.sin(angle);
+        v.y = x * Math.sin(angle) + y * Math.cos(angle);
+      };
+      
+      const rotateXZ = (v, angle) => {
+        const x = v.x;
+        const z = v.z;
+        v.x = x * Math.cos(angle) - z * Math.sin(angle);
+        v.z = x * Math.sin(angle) + z * Math.cos(angle);
+      };
+      
+      const rotateXW = (v, angle) => {
+        const x = v.x;
+        const w = v.w;
+        v.x = x * Math.cos(angle) - w * Math.sin(angle);
+        v.w = x * Math.sin(angle) + w * Math.cos(angle);
+      };
+      
+      const rotateYZ = (v, angle) => {
+        const y = v.y;
+        const z = v.z;
+        v.y = y * Math.cos(angle) - z * Math.sin(angle);
+        v.z = y * Math.sin(angle) + z * Math.cos(angle);
+      };
+      
+      const rotateYW = (v, angle) => {
+        const y = v.y;
+        const w = v.w;
+        v.y = y * Math.cos(angle) - w * Math.sin(angle);
+        v.w = y * Math.sin(angle) + w * Math.cos(angle);
+      };
+      
+      const rotateZW = (v, angle) => {
+        const z = v.z;
+        const w = v.w;
+        v.z = z * Math.cos(angle) - w * Math.sin(angle);
+        v.w = z * Math.sin(angle) + w * Math.cos(angle);
+      };
+      
+      // Apply several rotations
+      vertices.forEach(v => {
+        rotateXY(v, rotationAngles.xy);
+        rotateXZ(v, rotationAngles.xz);
+        rotateXW(v, rotationAngles.xw);
+        rotateYZ(v, rotationAngles.yz);
+        rotateYW(v, rotationAngles.yw);
+        rotateZW(v, rotationAngles.zw);
+      });
+    };
+    
+    // Track rotation angles
+    const rotationAngles = {
+      xy: 0,
+      xz: 0,
+      xw: 0,
+      yz: 0,
+      yw: 0,
+      zw: 0
+    };
+    
+    // Update dimension label based on current settings
+    const updateDimensionLabel = () => {
+      const labels = [
+        "Spacetime Continuum",
+        "Quantum Probability Field",
+        "Hyperspace Flux",
+        "Tesseract Projection",
+        "Einstein-Rosen Bridge",
+        "Interdimensional Nexus",
+        "Temporal Convergence",
+        "Wheeler-DeWitt Wave Function",
+        "Minkowski Space",
+        "Calabi-Yau Manifold"
+      ];
+      
+      const factorSum = 
+        (rotationSpeed * 10000 / 50) + 
+        (wFactor * 250 / 50) + 
+        (complexity / 5) + 
+        (entropy * 100 / 50) + 
+        (timeFlow * 50 / 50);
+      
+      const index = Math.floor((factorSum / 5) * labels.length) % labels.length;
+      dimensionName.textContent = labels[index];
+      
+      // Update quotes based on settings
+      updateQuote();
+    };
+    
+    // Philosophical and sci-fi quotes
+    const quotes = [
+      {
+        text: "The only way to discover the limits of the possible is to go beyond them into the impossible.",
+        author: "Arthur C. Clarke"
+      },
+      {
+        text: "Time is a flat circle. Everything we have done or will do we will do over and over and over again, forever.",
+        author: "Nietzsche (via True Detective)"
+      },
+      {
+        text: "In my house, there are many rooms. In each room, there is a person just like you.",
+        author: "Many-Worlds Interpretation"
+      },
+      {
+        text: "Time is an illusion. Lunchtime doubly so.",
+        author: "Douglas Adams"
+      },
+      {
+        text: "We're all just stories in the end. Just make it a good one.",
+        author: "Doctor Who"
+      },
+      {
+        text: "The cosmos is within us. We are made of star-stuff.",
+        author: "Carl Sagan"
+      },
+      {
+        text: "Reality is that which, when you stop believing in it, doesn't go away.",
+        author: "Philip K. Dick"
+      },
+      {
+        text: "The universe is not only stranger than we imagine, it is stranger than we can imagine.",
+        author: "J.B.S. Haldane"
+      },
+      {
+        text: "We are not just in the universe, the universe is in us.",
+        author: "Neil deGrasse Tyson"
+      },
+      {
+        text: "Time is what keeps everything from happening at once.",
+        author: "Ray Cummings"
+      }
+    ];
+    
+    // Update the displayed quote
+    const updateQuote = () => {
+      const quoteElement = document.getElementById('quote');
+      const factorSum = rotationSpeed + wFactor + complexity / 10 + entropy + timeFlow;
+      const index = Math.floor(factorSum * 10) % quotes.length;
+      
+      quoteElement.innerHTML = `"${quotes[index].text}"<div class="quote-author">- ${quotes[index].author}</div>`;
+    };
+    
+    // Initialize
+    createTesseract(tesseractSize);
+    createParticleSystem();
+    createTesseractGraph();
+    updateDimensionLabel();
+    
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      // Update rotation angles
+      rotationAngles.xy += rotationSpeed;
+      rotationAngles.xz += rotationSpeed * 0.7;
+      rotationAngles.xw += rotationSpeed * 1.3;
+      rotationAngles.yz += rotationSpeed * 0.5;
+      rotationAngles.yw += rotationSpeed * 0.9;
+      rotationAngles.zw += rotationSpeed * 1.1;
+      
+      // Update tesseract
+      createTesseractGraph();
+      
+      // Update particles
+      updateParticles();
+      
+      // Render scene
+      renderer.render(scene, camera);
+    }
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+    // Start animation
+    animate();
+  </script>
+</body>
+</html>
